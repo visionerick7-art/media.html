@@ -1,0 +1,1249 @@
+
+<!--
+ISRLATA MEDIA — THE 200 CREATOR NETWORK
+FILE: media.html
+
+DESTINATION:
+GitHub repository: isrlata-media-network
+Place this file in the repository root.
+
+BEFORE USING:
+1. Create a NEW Supabase project for ISRLATA MEDIA.
+2. Run the complete schema.sql in Supabase SQL Editor.
+3. Open Supabase Project Settings -> API.
+4. Copy the Project URL and public anon/publishable key.
+5. Replace SUPABASE_URL and SUPABASE_PUBLIC_KEY below.
+6. Create your founder user in Supabase Authentication.
+7. Activate the founder profile using the trusted SQL procedure
+   supplied with the database setup instructions.
+8. Never put a service_role key, password, or private secret here.
+
+DEPENDENCIES:
+Supabase JavaScript client v2, loaded from the official CDN.
+
+SECURITY:
+This page is a public website file with a login-protected interface.
+Database security must be enforced by Supabase Row Level Security.
+Only active founder/admin profiles can enter the management dashboard.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#10291d">
+  <meta name="description" content="ISRLATA MEDIA — The 200 Creator Network. African originality, creativity and sustainable media production.">
+  <title>ISRLATA MEDIA | Network Headquarters</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --green: #10291d;
+      --green2: #1b4932;
+      --green3: #286343;
+      --gold: #d8ad4c;
+      --gold-light: #f2d88e;
+      --cream: #f5f4ed;
+      --white: #ffffff;
+      --ink: #1c2b22;
+      --muted: #718078;
+      --line: #e5e9e3;
+      --red: #a83c35;
+      --shadow: 0 12px 35px rgba(12, 37, 24, .09);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--cream);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    button, input { font: inherit; }
+
+    button { cursor: pointer; }
+
+    .hidden { display: none !important; }
+
+    .login-screen {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      background: var(--green);
+    }
+
+    .brand-panel {
+      padding: 65px clamp(25px, 7vw, 100px);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background:
+        radial-gradient(circle at 80% 20%, rgba(216,173,76,.18), transparent 35%),
+        linear-gradient(145deg, #10291d, #1d4931);
+    }
+
+    .brand-mark {
+      color: var(--gold-light);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 4px;
+      margin-bottom: 35px;
+    }
+
+    .brand-panel h1 {
+      font-size: clamp(38px, 5vw, 68px);
+      line-height: 1.03;
+      margin: 0 0 22px;
+      max-width: 650px;
+    }
+
+    .brand-panel h1 span { color: var(--gold-light); }
+
+    .brand-panel p {
+      color: #d5e1d7;
+      line-height: 1.8;
+      max-width: 520px;
+      font-size: 16px;
+    }
+
+    .brand-foot {
+      margin-top: 65px;
+      color: #b7c8bb;
+      font-size: 12px;
+      letter-spacing: 1px;
+    }
+
+    .login-area {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 35px;
+      background: #f8f8f3;
+    }
+
+    .login-card {
+      background: white;
+      width: 100%;
+      max-width: 430px;
+      padding: 40px;
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .login-card h2 { margin: 0 0 8px; font-size: 27px; }
+
+    .subtext {
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 14px;
+      margin-bottom: 28px;
+    }
+
+    .field { margin-bottom: 18px; }
+
+    .field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .field input {
+      width: 100%;
+      border: 1px solid #dce3dc;
+      border-radius: 9px;
+      padding: 14px;
+      outline: none;
+      background: #fff;
+    }
+
+    .field input:focus {
+      border-color: var(--green3);
+      box-shadow: 0 0 0 3px rgba(40,99,67,.1);
+    }
+
+    .primary-btn {
+      border: 0;
+      width: 100%;
+      padding: 15px;
+      color: white;
+      background: var(--green2);
+      border-radius: 9px;
+      font-weight: 700;
+      transition: .2s;
+    }
+
+    .primary-btn:hover { background: var(--green3); }
+
+    .primary-btn:disabled {
+      opacity: .6;
+      cursor: wait;
+    }
+
+    .message {
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-top: 15px;
+      display: none;
+    }
+
+    .message.error {
+      display: block;
+      color: #8b2925;
+      background: #fff0ee;
+    }
+
+    .message.success {
+      display: block;
+      color: #205a39;
+      background: #edf8ef;
+    }
+
+    .login-note {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 22px;
+      line-height: 1.6;
+    }
+
+    /* DASHBOARD */
+
+    .dashboard { min-height: 100vh; }
+
+    .topbar {
+      height: 76px;
+      padding: 0 30px;
+      background: var(--green);
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .top-brand {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      min-width: 0;
+    }
+
+    .logo-box {
+      height: 43px;
+      width: 43px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--gold);
+      color: var(--gold-light);
+      font-weight: 900;
+      border-radius: 10px;
+    }
+
+    .top-brand strong {
+      display: block;
+      letter-spacing: 1.5px;
+      font-size: 14px;
+    }
+
+    .top-brand small {
+      display: block;
+      color: #c7d5ca;
+      font-size: 10px;
+      margin-top: 4px;
+      letter-spacing: 1px;
+    }
+
+    .user-area {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .user-info { text-align: right; }
+
+    .user-info strong {
+      display: block;
+      font-size: 13px;
+    }
+
+    .user-info small {
+      color: var(--gold-light);
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .logout-btn {
+      border: 1px solid #78917e;
+      color: white;
+      background: transparent;
+      padding: 9px 14px;
+      border-radius: 7px;
+    }
+
+    .logout-btn:hover { background: #284c36; }
+
+    .dashboard-layout {
+      display: grid;
+      grid-template-columns: 245px 1fr;
+      min-height: calc(100vh - 76px);
+    }
+
+    .sidebar {
+      background: white;
+      border-right: 1px solid var(--line);
+      padding: 27px 16px;
+    }
+
+    .side-label {
+      color: #849087;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1.7px;
+      padding: 10px 13px;
+    }
+
+    .nav-btn {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 13px;
+      margin: 3px 0;
+      border: 0;
+      border-radius: 8px;
+      color: #53645a;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .nav-btn:hover, .nav-btn.active {
+      color: var(--green);
+      background: #edf4ed;
+    }
+
+    .nav-btn.active { border-left: 3px solid var(--gold); }
+
+    .sidebar-note {
+      margin: 35px 8px 0;
+      padding: 16px;
+      border-radius: 10px;
+      background: #f4f5ef;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #68766d;
+    }
+
+    .main-content {
+      padding: 35px clamp(18px, 4vw, 55px);
+      min-width: 0;
+    }
+
+    .page-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 15px;
+      margin-bottom: 27px;
+    }
+
+    .page-heading h1 {
+      margin: 0 0 8px;
+      font-size: clamp(24px, 3vw, 34px);
+      color: var(--green);
+    }
+
+    .page-heading p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .status-pill {
+      padding: 8px 12px;
+      border-radius: 30px;
+      color: #23603b;
+      background: #e7f4e8;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 17px;
+      margin-bottom: 25px;
+    }
+
+    .stat-card {
+      padding: 22px;
+      border-radius: 12px;
+      background: white;
+      border: 1px solid var(--line);
+      box-shadow: 0 4px 15px rgba(0,0,0,.025);
+    }
+
+    .stat-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+
+    .stat-card strong {
+      display: block;
+      color: var(--green);
+      font-size: 30px;
+    }
+
+    .stat-card small {
+      display: block;
+      color: #89948d;
+      font-size: 11px;
+      margin-top: 8px;
+    }
+
+    .content-panel {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 23px;
+      margin-bottom: 22px;
+      overflow: hidden;
+    }
+
+    .panel-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .panel-heading h2 {
+      color: var(--green);
+      font-size: 17px;
+      margin: 0;
+    }
+
+    .muted { color: var(--muted); font-size: 12px; }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 650px;
+      font-size: 12px;
+    }
+
+    th {
+      text-align: left;
+      color: #7a887e;
+      font-size: 10px;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      background: #f7f8f4;
+    }
+
+    th, td {
+      padding: 13px 12px;
+      border-bottom: 1px solid #edf0eb;
+      vertical-align: middle;
+    }
+
+    td { color: #3c4d42; }
+
+    .tag {
+      display: inline-block;
+      padding: 5px 8px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
+      background: #edf1ed;
+      color: #526257;
+    }
+
+    .tag.approved, .tag.active, .tag.granted {
+      color: #20613a;
+      background: #e5f4e8;
+    }
+
+    .tag.pending {
+      color: #85611a;
+      background: #fff4d9;
+    }
+
+    .tag.rejected, .tag.suspended, .tag.revoked {
+      color: #923b34;
+      background: #fae9e7;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #7c8980;
+      padding: 35px 15px;
+      font-size: 13px;
+    }
+
+    .notice {
+      padding: 16px;
+      background: #f8f3e5;
+      border-left: 4px solid var(--gold);
+      color: #6f5b2b;
+      font-size: 12px;
+      line-height: 1.7;
+      border-radius: 6px;
+      margin-bottom: 22px;
+    }
+
+    .refresh-btn {
+      border: 1px solid #d8e0d8;
+      background: white;
+      padding: 9px 13px;
+      border-radius: 7px;
+      color: var(--green);
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .refresh-btn:hover { background: #f2f6f1; }
+
+    .footer {
+      color: #8b968e;
+      font-size: 11px;
+      padding: 20px 0;
+      text-align: center;
+    }
+
+    .loading { opacity: .65; }
+
+    @media (max-width: 950px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .dashboard-layout { grid-template-columns: 205px 1fr; }
+    }
+
+    @media (max-width: 700px) {
+      .login-screen { grid-template-columns: 1fr; }
+      .brand-panel { padding: 38px 25px; }
+      .brand-panel h1 { font-size: 43px; }
+      .brand-foot { margin-top: 25px; }
+      .login-area { padding: 25px 15px; }
+      .login-card { padding: 27px 22px; }
+      .topbar { padding: 0 14px; height: 68px; }
+      .top-brand strong { font-size: 11px; }
+      .top-brand small { font-size: 8px; }
+      .logo-box { width: 36px; height: 36px; }
+      .user-info { display: none; }
+      .dashboard-layout { display: block; }
+      .sidebar {
+        display: flex;
+        overflow-x: auto;
+        padding: 8px;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+        gap: 4px;
+      }
+      .side-label, .sidebar-note { display: none; }
+      .nav-btn {
+        width: auto;
+        white-space: nowrap;
+        padding: 11px;
+        margin: 0;
+      }
+      .main-content { padding: 25px 14px; }
+      .stats-grid { gap: 10px; }
+      .stat-card { padding: 15px; }
+      .stat-card strong { font-size: 25px; }
+      .content-panel { padding: 15px; }
+    }
+
+    @media (max-width: 380px) {
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .logout-btn { padding: 8px 10px; font-size: 11px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- LOGIN SCREEN -->
+  <section id="loginScreen" class="login-screen">
+    <div class="brand-panel">
+      <div class="brand-mark">ISRLATA • AFRICAN ORIGINALITY NETWORK</div>
+      <h1>ISRLATA <span>MEDIA</span></h1>
+      <p>
+        The 200 Creator Network. A coordinated platform for African
+        creativity, real-life storytelling, comedy, culture, education,
+        innovation and sustainable media production.
+      </p>
+      <p>
+        Original voices. Responsible production. Genuine audiences.
+        Shared opportunities.
+      </p>
+      <div class="brand-foot">INTEGRITY • ORIGINALITY • ACTION • SUSTAINABILITY</div>
+    </div>
+
+    <div class="login-area">
+      <div class="login-card">
+        <h2>Network Headquarters</h2>
+        <p class="subtext">
+          Authorised founder and administrator access only.
+          Sign in using your registered management account.
+        </p>
+
+        <form id="loginForm">
+          <div class="field">
+            <label for="email">Management email</label>
+            <input id="email" type="email" autocomplete="username"
+              placeholder="Enter your registered email" required>
+          </div>
+
+          <div class="field">
+            <label for="password">Password</label>
+            <input id="password" type="password"
+              autocomplete="current-password"
+              placeholder="Enter your password" required>
+          </div>
+
+          <button id="loginButton" class="primary-btn" type="submit">
+            Sign in to Headquarters
+          </button>
+        </form>
+
+        <div id="loginMessage" class="message" role="alert"></div>
+
+        <p class="login-note">
+          Creator registration will be provided through a separate member
+          portal. This page is not the public registration portal.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRIVATE MANAGEMENT DASHBOARD -->
+  <section id="dashboard" class="dashboard hidden">
+    <header class="topbar">
+      <div class="top-brand">
+        <div class="logo-box">IM</div>
+        <div>
+          <strong>ISRLATA MEDIA</strong>
+          <small>THE 200 CREATOR NETWORK</small>
+        </div>
+      </div>
+
+      <div class="user-area">
+        <div class="user-info">
+          <strong id="userName">Management</strong>
+          <small id="userRole">Authorised staff</small>
+        </div>
+        <button id="logoutButton" class="logout-btn">Log out</button>
+      </div>
+    </header>
+
+    <div class="dashboard-layout">
+      <aside class="sidebar">
+        <div class="side-label">HEADQUARTERS</div>
+        <button class="nav-btn active" data-page="overview">◈ Overview</button>
+        <button class="nav-btn" data-page="creators">♙ Creator Network</button>
+        <button class="nav-btn" data-page="content">▣ Content Submissions</button>
+        <button class="nav-btn" data-page="permissions">◎ Account Permissions</button>
+        <button class="nav-btn" data-page="campaigns">↗ Distribution Campaigns</button>
+
+        <div class="side-label" style="margin-top:20px;">GOVERNANCE</div>
+        <button class="nav-btn" data-page="principles">✦ Network Principles</button>
+
+        <div class="sidebar-note">
+          <strong>Our operating principle</strong><br>
+          Build genuine audiences through original work, ethical
+          collaboration and responsible distribution.
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <div class="page-heading">
+          <div>
+            <h1 id="pageTitle">Network Overview</h1>
+            <p id="pageDescription">
+              Monitor the network's current operational records.
+            </p>
+          </div>
+          <span class="status-pill">● SECURE SESSION</span>
+        </div>
+
+        <div id="noticeArea" class="notice">
+          Welcome to ISRLATA MEDIA Headquarters. Dashboard figures are
+          retrieved from your separate ISRLATA MEDIA Supabase database.
+        </div>
+
+        <section id="overviewPage">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span>Registered Creators</span>
+              <strong id="creatorCount">—</strong>
+              <small>Creator profiles in the database</small>
+            </div>
+            <div class="stat-card">
+              <span>Active Creators</span>
+              <strong id="activeCreatorCount">—</strong>
+              <small>Approved active members</small>
+            </div>
+            <div class="stat-card">
+              <span>Content Submissions</span>
+              <strong id="contentCount">—</strong>
+              <small>All recorded submissions</small>
+            </div>
+            <div class="stat-card">
+              <span>Pending Reviews</span>
+              <strong id="pendingCount">—</strong>
+              <small>Awaiting editorial review</small>
+            </div>
+          </div>
+
+          <div class="content-panel">
+            <div class="panel-heading">
+              <h2>Recent Content Submissions</h2>
+              <button class="refresh-btn" id="refreshOverview">Refresh data</button>
+            </div>
+            <div id="recentContent" class="empty-state">Loading records...</div>
+          </div>
+
+          <div class="content-panel">
+            <div class="panel-heading">
+              <h2>Management Priorities</h2>
+            </div>
+            <ul style="color:#58695e;font-size:13px;line-height:2;">
+              <li>Verify and activate genuine creator applications.</li>
+              <li>Review submissions before network distribution.</li>
+              <li>Obtain written permissions before managing member accounts.</li>
+              <li>Develop transparent production and revenue-sharing agreements.</li>
+              <li>Build real audiences without artificial engagement.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section id="recordsPage" class="hidden">
+          <div class="content-panel">
+            <div class="panel-heading">
+              <h2 id="recordsTitle">Records</h2>
+              <button class="refresh-btn" id="refreshRecords">Refresh</button>
+            </div>
+            <div id="recordsOutput" class="empty-state">Select a section to view records.</div>
+          </div>
+        </section>
+
+        <section id="principlesPage" class="hidden">
+          <div class="content-panel">
+            <h2 style="color:var(--green);">The ISRLATA MEDIA Principles</h2>
+            <p class="muted">The foundation of the network's operations.</p>
+            <h3>1. African originality</h3>
+            <p>Promote original African ideas, stories, languages, culture and creativity.</p>
+            <h3>2. Integrity and authenticity</h3>
+            <p>No purchased engagement, fake views, fake followers, bots or misleading reporting.</p>
+            <h3>3. Creator ownership</h3>
+            <p>Members retain ownership of their personal accounts and original work unless a separate written agreement provides otherwise.</p>
+            <h3>4. Responsible account permissions</h3>
+            <p>Never request or store a member's account password or verification code. Use only authorised platform permissions.</p>
+            <h3>5. Transparent commercial activity</h3>
+            <p>Record actual income, expenses, agreed allocations and payments. Individual channel income remains with its owner unless separately agreed.</p>
+            <h3>6. Sustainable production</h3>
+            <p>Use media to educate, entertain, document and support practical development.</p>
+          </div>
+        </section>
+
+        <div class="footer">
+          ISRLATA MEDIA — THE 200 CREATOR NETWORK<br>
+          Integrity • Originality • Action • Sustainability
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <script>
+    /* =========================================================
+       SUPABASE CONNECTION
+       Replace these two values with your NEW MEDIA project details.
+       Never use the service_role key in this public HTML file.
+       ========================================================= */
+
+    const SUPABASE_URL = "https://supabase.com/dashboard/project/kmwpuldkvydkvozvfcdc";
+    const SUPABASE_PUBLIC_KEY = "sb_publishable_eUQQaJfboD-1TRAGULQQnw_vVCSUQgv";
+
+    /* =========================================================
+       APPLICATION
+       ========================================================= */
+
+    const loginScreen = document.getElementById("loginScreen");
+    const dashboard = document.getElementById("dashboard");
+    const loginForm = document.getElementById("loginForm");
+    const loginButton = document.getElementById("loginButton");
+    const loginMessage = document.getElementById("loginMessage");
+
+    let supabaseClient = null;
+    let currentProfile = null;
+    let currentPage = "overview";
+    let authCheckInProgress = false;
+
+    function escapeHTML(value) {
+      return String(value ?? "").replace(/[&<>"']/g, character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      })[character]);
+    }
+
+    function showMessage(message, type = "error") {
+      loginMessage.textContent = message;
+      loginMessage.className = "message " + type;
+    }
+
+    function clearMessage() {
+      loginMessage.textContent = "";
+      loginMessage.className = "message";
+    }
+
+    function configurationReady() {
+      return SUPABASE_URL.startsWith("https://") &&
+        SUPABASE_PUBLIC_KEY !== "YOUR_NEW_SUPABASE_PUBLIC_ANON_OR_PUBLISHABLE_KEY" &&
+        SUPABASE_PUBLIC_KEY.length > 20;
+    }
+
+    function showLogin(message = "") {
+      dashboard.classList.add("hidden");
+      loginScreen.classList.remove("hidden");
+      currentProfile = null;
+      if (message) showMessage(message);
+    }
+
+    function showDashboard(profile) {
+      currentProfile = profile;
+      loginScreen.classList.add("hidden");
+      dashboard.classList.remove("hidden");
+
+      document.getElementById("userName").textContent =
+        profile.creator_name || profile.full_name || "Network Management";
+
+      document.getElementById("userRole").textContent =
+        profile.role || "Authorised staff";
+
+      navigate("overview");
+      loadOverview();
+    }
+
+    async function getAuthorisedProfile(userId) {
+      const { data, error } = await supabaseClient
+        .from("profiles")
+        .select("id, full_name, creator_name, email, role, account_status, membership_number")
+        .eq("id", userId)
+        .single();
+
+      if (error || !data) {
+        throw new Error("Your management profile could not be verified. Contact the network founder.");
+      }
+
+      if (data.account_status !== "active") {
+        throw new Error("Your account is not active. Contact the network founder.");
+      }
+
+      if (!["founder", "admin"].includes(data.role)) {
+        throw new Error("This account does not have management access. Use the creator portal when it becomes available.");
+      }
+
+      return data;
+    }
+
+    async function enterWithSession(session) {
+      if (!session || !session.user) {
+        showLogin();
+        return;
+      }
+
+      try {
+        const profile = await getAuthorisedProfile(session.user.id);
+        showDashboard(profile);
+      } catch (error) {
+        await supabaseClient.auth.signOut();
+        showLogin(error.message);
+      }
+    }
+
+    async function initialise() {
+      if (!window.supabase) {
+        showMessage("The Supabase library could not load. Check your internet connection and refresh.");
+        return;
+      }
+
+      if (!configurationReady()) {
+        showMessage("Setup required: add your new Supabase Project URL and public anon/publishable key in the configuration section of media.html.");
+        return;
+      }
+
+      const { createClient } = window.supabase;
+
+      supabaseClient = createClient(
+        SUPABASE_URL,
+        SUPABASE_PUBLIC_KEY,
+        {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true
+          }
+        }
+      );
+
+      const { data, error } = await supabaseClient.auth.getSession();
+
+      if (error) {
+        showMessage("Could not restore your login session. Please sign in again.");
+      } else if (data.session) {
+        await enterWithSession(data.session);
+      }
+
+      supabaseClient.auth.onAuthStateChange(async (event, session) => {
+        if (authCheckInProgress) return;
+
+        if (event === "SIGNED_OUT") {
+          showLogin();
+          return;
+        }
+
+        if (event === "SIGNED_IN" && session) {
+          authCheckInProgress = true;
+          try {
+            await enterWithSession(session);
+          } finally {
+            authCheckInProgress = false;
+          }
+        }
+      });
+    }
+
+    loginForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      clearMessage();
+
+      if (!supabaseClient) {
+        showMessage("Supabase is not configured yet. Complete the connection instructions first.");
+        return;
+      }
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      loginButton.disabled = true;
+      loginButton.textContent = "Verifying access...";
+
+      try {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (error) throw error;
+
+        await enterWithSession(data.session);
+      } catch (error) {
+        showLogin(error.message || "Login failed. Check your details and try again.");
+      } finally {
+        loginButton.disabled = false;
+        loginButton.textContent = "Sign in to Headquarters";
+      }
+    });
+
+    document.getElementById("logoutButton").addEventListener("click", async () => {
+      if (!supabaseClient) return;
+      await supabaseClient.auth.signOut();
+      showLogin("You have signed out.");
+    });
+
+    /* =========================================================
+       NAVIGATION
+       ========================================================= */
+
+    function navigate(page) {
+      currentPage = page;
+
+      document.querySelectorAll(".nav-btn").forEach(button => {
+        button.classList.toggle("active", button.dataset.page === page);
+      });
+
+      document.getElementById("overviewPage").classList.toggle("hidden", page !== "overview");
+      document.getElementById("recordsPage").classList.toggle("hidden",
+        !["creators", "content", "permissions", "campaigns"].includes(page));
+      document.getElementById("principlesPage").classList.toggle("hidden", page !== "principles");
+
+      const headings = {
+        overview: ["Network Overview", "Monitor the network's current operational records."],
+        creators: ["Creator Network", "Review registered creator profiles and membership status."],
+        content: ["Content Submissions", "Monitor submitted media and editorial review status."],
+        permissions: ["Account Permissions", "Review member permissions for supported platform activities."],
+        campaigns: ["Distribution Campaigns", "Review network distribution campaign records."],
+        principles: ["Network Principles", "The standards guiding our media network."]
+      };
+
+      document.getElementById("pageTitle").textContent = headings[page][0];
+      document.getElementById("pageDescription").textContent = headings[page][1];
+
+      if (["creators", "content", "permissions", "campaigns"].includes(page)) {
+        loadRecords(page);
+      }
+    }
+
+    document.querySelectorAll(".nav-btn").forEach(button => {
+      button.addEventListener("click", () => navigate(button.dataset.page));
+    });
+
+    /* =========================================================
+       DATABASE DATA
+       ========================================================= */
+
+    async function getCount(table, filters = []) {
+      let query = supabaseClient.from(table).select("*", {
+        count: "exact",
+        head: true
+      });
+
+      filters.forEach(([column, operator, value]) => {
+        query = query[operator](column, value);
+      });
+
+      const { count, error } = await query;
+      if (error) throw error;
+      return count ?? 0;
+    }
+
+    async function loadOverview() {
+      if (!currentProfile || !supabaseClient) return;
+
+      const ids = [
+        "creatorCount",
+        "activeCreatorCount",
+        "contentCount",
+        "pendingCount"
+      ];
+
+      ids.forEach(id => {
+        document.getElementById(id).textContent = "…";
+      });
+
+      try {
+        const [
+          creators,
+          activeCreators,
+          content,
+          pending
+        ] = await Promise.all([
+          getCount("profiles", [["role", "eq", "member"]]),
+          getCount("profiles", [["role", "eq", "member"], ["account_status", "eq", "active"]]),
+          getCount("content_submissions"),
+          getCount("content_submissions", [["editorial_status", "eq", "pending"]])
+        ]);
+
+        document.getElementById("creatorCount").textContent = creators;
+        document.getElementById("activeCreatorCount").textContent = activeCreators;
+        document.getElementById("contentCount").textContent = content;
+        document.getElementById("pendingCount").textContent = pending;
+
+        await loadRecentContent();
+      } catch (error) {
+        document.getElementById("recentContent").innerHTML =
+          '<div class="empty-state">Could not load database records. Check that schema.sql has been executed and your staff account is active.</div>';
+
+        ids.forEach(id => {
+          if (document.getElementById(id).textContent === "…") {
+            document.getElementById(id).textContent = "—";
+          }
+        });
+      }
+    }
+
+    async function loadRecentContent() {
+      const container = document.getElementById("recentContent");
+
+      const { data, error } = await supabaseClient
+        .from("content_submissions")
+        .select("title, category, platform, editorial_status, created_at")
+        .order("created_at", { ascending: false })
+        .limit(8);
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        container.innerHTML = '<div class="empty-state">No content submissions have been recorded yet.</div>';
+        return;
+      }
+
+      container.innerHTML = buildTable(
+        ["Title", "Category", "Platform", "Editorial status", "Date"],
+        data.map(item => [
+          item.title,
+          item.category,
+          item.platform,
+          statusTag(item.editorial_status),
+          formatDate(item.created_at)
+        ]),
+        true
+      );
+    }
+
+    function statusTag(value) {
+      const safe = escapeHTML(value || "unknown");
+      const css = String(value || "").toLowerCase().replace(/[^a-z_]/g, "");
+      return '<span class="tag ' + css + '">' + safe.replaceAll("_", " ") + '</span>';
+    }
+
+    function formatDate(value) {
+      if (!value) return "—";
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString();
+    }
+
+    function buildTable(headers, rows, statusAlreadyHTML = false) {
+      if (!rows.length) return '<div class="empty-state">No records found.</div>';
+
+      let html = '<div class="table-wrap"><table><thead><tr>';
+      headers.forEach(header => html += "<th>" + escapeHTML(header) + "</th>");
+      html += "</tr></thead><tbody>";
+
+      rows.forEach(row => {
+        html += "<tr>";
+        row.forEach(cell => {
+          const isTag = typeof cell === "string" && cell.startsWith('<span class="tag ');
+          html += "<td>" + (isTag ? cell : escapeHTML(cell ?? "—")) + "</td>";
+        });
+        html += "</tr>";
+      });
+
+      html += "</tbody></table></div>";
+      return html;
+    }
+
+    async function loadRecords(page) {
+      const output = document.getElementById("recordsOutput");
+      const title = document.getElementById("recordsTitle");
+
+      const config = {
+        creators: {
+          table: "profiles",
+          columns: ["full_name", "creator_name", "email", "county", "role", "account_status", "membership_number"],
+          headers: ["Full name", "Creator name", "Email", "County", "Role", "Status", "Membership number"],
+          filterMembers: true
+        },
+        content: {
+          table: "content_submissions",
+          columns: ["title", "category", "platform", "editorial_status", "video_url", "created_at"],
+          headers: ["Title", "Category", "Platform", "Review status", "Video link", "Date"]
+        },
+        permissions: {
+          table: "account_permissions",
+          columns: ["platform", "account_url", "authorised_actions", "permission_status", "created_at"],
+          headers: ["Platform", "Account link", "Authorised actions", "Permission status", "Date"]
+        },
+        campaigns: {
+          table: "distribution_campaigns",
+          columns: ["*"],
+          headers: null
+        }
+      };
+
+      const selected = config[page];
+      title.textContent = {
+        creators: "Registered Creators",
+        content: "Content Submissions",
+        permissions: "Account Permissions",
+        campaigns: "Distribution Campaigns"
+      }[page];
+
+      output.innerHTML = '<div class="empty-state">Loading records...</div>';
+
+      try {
+        let query = supabaseClient.from(selected.table).select(
+          selected.columns.join(",")
+        );
+
+        if (selected.filterMembers) {
+          query = query.eq("role", "member");
+        }
+
+        if (page !== "campaigns") {
+          query = query.order("created_at", { ascending: false }).limit(100);
+        } else {
+          query = query.limit(100);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        if (!data || !data.length) {
+          output.innerHTML = '<div class="empty-state">No records available in this section yet.</div>';
+          return;
+        }
+
+        if (page === "campaigns") {
+          const keys = Object.keys(data[0]);
+          output.innerHTML = buildTable(
+            keys,
+            data.map(record => keys.map(key => {
+              const value = record[key];
+              return typeof value === "object" && value !== null
+                ? JSON.stringify(value)
+                : String(value ?? "—");
+            }))
+          );
+          return;
+        }
+
+        const rows = data.map(record => selected.columns.map(column => {
+          const value = record[column];
+
+          if (column === "editorial_status" || column === "permission_status" || column === "account_status") {
+            return statusTag(value);
+          }
+
+          if (column === "created_at") return formatDate(value);
+
+          if (column === "authorised_actions" && Array.isArray(value)) {
+            return value.join(", ");
+          }
+
+          if (column === "video_url" || column === "account_url") {
+            return value ? String(value) : "—";
+          }
+
+          return value === null || value === undefined ? "—" : String(value);
+        }));
+
+        output.innerHTML = buildTable(selected.headers, rows);
+      } catch (error) {
+        output.innerHTML =
+          '<div class="empty-state">Could not load this section. Check database setup, table names and permissions. Details: ' +
+          escapeHTML(error.message) + '</div>';
+      }
+    }
+
+    document.getElementById("refreshOverview").addEventListener("click", loadOverview);
+
+    document.getElementById("refreshRecords").addEventListener("click", () => {
+      if (currentPage) loadRecords(currentPage);
+    });
+
+    /* START */
+    initialise();
+  </script>
+</body>
+</html>
